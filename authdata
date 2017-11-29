@@ -1,0 +1,11 @@
+# Note: to create basic authorization token base64encode username:password
+
+# github account settings
+REPOOWNER=astachurski
+AUTHSTR="base64encode your username:password"
+
+# student group settings
+GROUPNO=4
+PREFIX=solutions
+# create public or private repositories - depends on account type
+PRIV=false
