@@ -5,7 +5,7 @@ PREFIX=solutions
 PRIV=true # create public or private repositories - depends on account type
 
 # Note: to create basic authorization token base64encode username:password
-AUTHSTR="Q29kZXJzVHJ1c3RQTDpjb2RlcnN0cnVzdDEyMw==" 
+AUTHSTR="" 
 
 echo "=================================================================="
 echo " Usage: "
