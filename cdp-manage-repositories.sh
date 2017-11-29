@@ -2,12 +2,13 @@ source authdata
 API=https://api.github.com
 
 echo "=================================================================="
-echo " Usage: "
+echo " Usage:                                                           "
 echo " ./cdp-manage-repositories.sh create|remove|activity students-list"
 echo " create - create all repositories and configure them              "
 echo " remove - removes all repositories                                "
 echo " activity - returns date of last commit for each student          "
-echo ""
+echo " getpullreqs - returns # of open pull requests for each student   "
+echo "                                                                  "
 echo " Note: jq parser is needed to obtain activity data                "
 echo "=================================================================="
 echo
