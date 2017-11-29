@@ -1,11 +1,5 @@
+source authdata
 API=https://api.github.com
-REPOOWNER=astachurski
-GROUPNO=4
-PREFIX=solutions
-PRIV=true # create public or private repositories - depends on account type
-
-# Note: to create basic authorization token base64encode username:password
-AUTHSTR="" 
 
 echo "=================================================================="
 echo " Usage: "
@@ -24,11 +18,14 @@ if [ $# -ne 2 ]; then
 fi
 
 function create_repo(){
-    curl -i \
+    echo "creting repository for: "
+    echo "grupa: "  $GROUPNO
+    echo "priv: " $PRIV
+    echo "repo owner: " $REPOOWNER
+    curl -v  \
      -H "Content-Typet: application/json" \
      -H "Authorization: Basic $AUTHSTR" \
-     -X POST -d '{"name":"'"$1"'","auto_init":"true","private":"'"${PRIV}"'"' \
-         $API/user/repos    
+     -X POST -d '{"name":"'"$1"'","auto_init":"true","private":'$PRIV'}'  $API/user/repos
 }
 
 function  delete_repo(){
@@ -47,6 +44,17 @@ function  get_activity_for_repo(){
      $API/repos/$REPOOWNER/$1/commits`
    RES=`jq '.[0] | .commit.author.date' <(echo ${RESULT})`
    echo ${RES:1:10}
+}
+
+function  get_pullrequests_repo(){
+   RESULT=`curl -s \
+     -H "Content-Typet: application/json" \
+     -H "Authorization: Basic $AUTHSTR" \
+     -X GET \
+     $API/repos/$REPOOWNER/$1/pulls`
+
+   echo " -----open pull requests:-------- "
+   jq '. | length'  <(echo $RESULT)
 }
 
 # $1 - reponame
@@ -103,5 +111,10 @@ do
     if [ $1 = "activity" ]; then
     	echo "--- getting actitivy data ---"
 	get_activity_for_repo  $REPONAMEFULL 
-    fi    
+    fi
+
+    if [ $1 = "getpullreqs" ]; then
+    	echo "--- getting pull requests ---"
+	get_pullrequests_repo  $REPONAMEFULL 
+    fi        
 done <"$file"
