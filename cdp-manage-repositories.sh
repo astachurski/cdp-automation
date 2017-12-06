@@ -1,19 +1,21 @@
+#!/bin/bash
+
 source authdata
 API=https://api.github.com
 
-echo "=================================================================="
-echo " Usage:                                                           "
-echo " ./cdp-manage-repositories.sh create|remove|activity students-list"
-echo " create - create all repositories and configure them              "
-echo " remove - removes all repositories                                "
-echo " activity - returns date of last commit for each student          "
-echo " getpullreqs - returns # of open pull requests for each student   "
-echo "                                                                  "
-echo " Note: jq parser is needed to obtain activity data                "
-echo "=================================================================="
+echo "======================================================================================"
+echo " Usage:                                                                               "
+echo " ./cdp-manage-repositories.sh create|remove|activity|collab students-list collaborator"
+echo " create - create all repositories and configure them                                  "
+echo " remove - removes all repositories                                                    "
+echo " activity - returns date of last commit for each student                              "
+echo " getpullreqs - returns # of open pull requests for each student                       "
+echo " collab - add colabborators with push authorization to all repositories               "
+echo " Note: jq parser is needed to obtain activity data                                    "
+echo "======================================================================================"
 echo
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
     echo "illegal number of parameters, exiting..."
     exit
 fi
@@ -58,6 +60,15 @@ function  get_pullrequests_repo(){
    jq '. | length'  <(echo $RESULT)
 }
 
+#1 - repo
+#2 - github username (collaborator)
+function  add_user_as_colladorator_to_repo(){
+    curl -i \
+     -H "Content-Typet: application/json" \
+     -H "Authorization: Basic $AUTHSTR" \
+     -X PUT $API/repos/$REPOOWNER/$1/collaborators/$2
+}
+
 # $1 - reponame
 # #2 - branch
 function  update_repo_protection(){
@@ -81,8 +92,9 @@ EOF
 }
 
 
-file=$2
-echo "parameters passed:"$1,$2
+studentsfile=$2
+collaboratorsfile=$3
+echo "parameters passed:"$1,$2, $3
 
 while IFS='' read -r NAME || [[ -n "$line" ]];
 do
@@ -99,9 +111,20 @@ do
 	echo "--- configuring master branch ---"
 	update_repo_protection $REPONAMEFULL "master"
     fi
+    
     if [ $1 = "remove" ]; then
     	echo "--- removing ---"
 	delete_repo $REPONAMEFULL
+    fi
+
+    if [ $1 = "collab" ]; then
+    	echo "--- adding collaborators  ---"
+    	while IFS='' read -r COLLAB || [[ -n "$line" ]];
+    	do
+    	    echo "--- adding collaborator:"
+    	    echo $COLLAB
+    	    add_user_as_colladorator_to_repo $REPONAMEFULL $COLLAB
+    	done <"$collaboratorsfile"
     fi
 
     if [ $1 = "update" ]; then
@@ -118,4 +141,4 @@ do
     	echo "--- getting pull requests ---"
 	get_pullrequests_repo  $REPONAMEFULL 
     fi        
-done <"$file"
+done <"$studentsfile"
