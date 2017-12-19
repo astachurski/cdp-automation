@@ -42,13 +42,15 @@ function  delete_repo(){
 function  get_activity_for_repo(){
    RESULT=`curl -s \
      -H "Content-Typet: application/json" \
-     -H "Authorization: Basic $AUTHSTR" \
-     -X GET \
+     -H "Authorization: Basic $AUTHSTR" \ 
+    -X GET \
      $API/repos/$REPOOWNER/$1/commits`
    RES=`jq '.[0] | .commit.author.date' <(echo ${RESULT})`
    echo ${RES:1:10}
 }
 
+# $1 reponame
+# $2 student name
 function  get_pullrequests_repo(){
    RESULT=`curl -s \
      -H "Content-Typet: application/json" \
@@ -56,8 +58,15 @@ function  get_pullrequests_repo(){
      -X GET \
      $API/repos/$REPOOWNER/$1/pulls`
 
-   echo " -----open pull requests:-------- "
-   jq '. | length'  <(echo $RESULT)
+   NO=`jq '. | length'  <(echo $RESULT)`
+   CR=`jq '.[] | .created_at' <(echo $RESULT)`
+   if [[ "$NO" -ne 0 ]]; then
+       printf "%-40s %-30s %d\n" $1 $2 $NO   
+       for created in $CR; do
+	   echo "      date created: " $created;
+       done
+   fi
+   echo 
 }
 
 #1 - repo
@@ -94,7 +103,7 @@ EOF
 
 studentsfile=$2
 collaboratorsfile=$3
-echo "parameters passed:"$1,$2, $3
+# echo "parameters passed:"$1,$2, $3
 
 while IFS='' read -r NAME || [[ -n "$line" ]];
 do
@@ -104,7 +113,9 @@ do
     LNAMESHORT=${LNAME:0:3}
     REPONAME=`iconv -f utf-8 -t ascii//translit <<< $FNAME$LNAMESHORT`
     REPONAMEFULL=$PREFIX-$GROUPNO-$REPONAME
-    echo "repository to process: " $REPONAMEFULL
+    NAME=$FNAME$LNAME
+    
+    # echo "repository to process: " $REPONAMEFULL
     if [ $1 = "create" ]; then
     	echo "--- creating repository ---"
 	create_repo $REPONAMEFULL
@@ -138,7 +149,7 @@ do
     fi
 
     if [ $1 = "getpullreqs" ]; then
-    	echo "--- getting pull requests ---"
-	get_pullrequests_repo  $REPONAMEFULL 
+    	# echo "--- getting pull requests ---"
+	get_pullrequests_repo  $REPONAMEFULL $NAME
     fi        
 done <"$studentsfile"
